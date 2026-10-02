@@ -9,7 +9,7 @@ Tell it your dates, group, beds, budget and standards once. Claude scans ski res
 
 ## Install
 ```bash
-git clone <this-repo-url> ~/.claude/skills/sko_2027
+git clone https://github.com/eedobrosh-stack/sko-2027 ~/.claude/skills/sko_2027
 cd ~/.claude/skills/sko_2027 && cp spec.example.json spec.json
 ```
 (or clone anywhere and run `./install.sh`).
