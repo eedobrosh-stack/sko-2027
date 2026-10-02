@@ -1,0 +1,51 @@
+{
+  "trip": {
+    "name": "Ski trip 2027",
+    "check_in": "2027-02-17",
+    "check_out": "2027-02-22",
+    "strict_dates": true,
+    "airport": "Milan Malpensa (MXP)",
+    "max_drive_hours": 3
+  },
+  "group": {
+    "adults": 6,
+    "description": "6 adults, all male"
+  },
+  "beds": {
+    "real_beds_required": 6,
+    "prefer_single_beds": true,
+    "allow_sofa_beds": false,
+    "more_separate_bedrooms_is_better": true
+  },
+  "location": {
+    "preferred_resorts": ["La Thuile", "Val Gardena", "Madonna di Campiglio"],
+    "other_resorts_ok": true,
+    "lift_access": "walking distance to a lift (ski-in/ski-out is a bonus)",
+    "driving_to_lifts_is_showstopper": true
+  },
+  "budget": {
+    "currency": "EUR",
+    "max_total": 8800,
+    "ideal_total": 8000,
+    "flexibility_note": "Slightly over the max is OK only for something exceptional"
+  },
+  "quality": {
+    "tier": "medium-plus to high class, must look nice (no bootcamp rooms)",
+    "quality_beats_location": true,
+    "must_haves": ["kitchen"],
+    "deal_breakers": ["sofa beds counted as beds", "dated or shabby apartments", "needs a car to reach the lifts"]
+  },
+  "sources": {
+    "use": ["Airbnb", "Booking.com", "Vrbo", "Holidu", "Interhome", "local agencies", "owner sites"],
+    "exclude": [],
+    "recheck_aggregator_hits_on_google_for_direct_price": true
+  },
+  "email": {
+    "gmail_account": "you@gmail.com",
+    "signer_name": "Your Name",
+    "language": "English",
+    "subject_template": "{name}, {dates}, Reservation inquiry",
+    "extra_notes_for_every_email": "We arrive from the airport. Our flights are already booked."
+  },
+  "output_dir": "~/sko_2027_output"
+}

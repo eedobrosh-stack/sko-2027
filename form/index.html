@@ -1,0 +1,129 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ski Trip Finder</title>
+<style>
+:root{--bg:#f6f8fb;--card:#fff;--ink:#17202a;--muted:#5b6b7a;--line:#dfe6ee;--acc:#1f6feb;--ok:#1a7f37;--warn:#b54708}
+@media(prefers-color-scheme:dark){:root{--bg:#0f1419;--card:#161c24;--ink:#e6edf3;--muted:#9fb0c0;--line:#2a3542;--acc:#6cb2ff;--ok:#56d364;--warn:#f6b26b}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 -apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+.wrap{max-width:980px;margin:0 auto;padding:20px 16px 60px}h1{font-size:24px;margin:0 0 4px}.sub{color:var(--muted);margin:0 0 14px}
+.tabs{display:flex;gap:6px;margin:10px 0 16px}.tab{padding:8px 14px;border:1px solid var(--line);border-radius:8px;background:var(--card);cursor:pointer;color:var(--ink)}.tab.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+fieldset{background:var(--card);border:1px solid var(--line);border-radius:12px;margin:0 0 14px;padding:12px 14px}
+legend{font-weight:700;padding:0 6px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+label{display:block;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}
+input[type=text],input[type=number],input[type=date],textarea{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);font:inherit}
+textarea{min-height:60px;resize:vertical}.hint{font-size:12px;color:var(--muted);margin-top:2px}.chk{display:flex;gap:8px;align-items:center;padding-top:20px;text-transform:none;font-size:14px;color:var(--ink);letter-spacing:0}
+.bar{position:sticky;bottom:0;background:var(--bg);border-top:1px solid var(--line);padding:12px 0;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button{padding:9px 14px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;font:inherit}button.p{background:var(--acc);color:#fff;border-color:var(--acc)}
+#msg{color:var(--ok);font-size:13px}pre{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px;overflow:auto}
+table{border-collapse:collapse;width:100%;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+th,td{text-align:left;padding:8px 10px;border-top:1px solid var(--line);font-size:14px;vertical-align:top}th{border-top:0;color:var(--muted);font-size:12px;text-transform:uppercase}
+td small{display:block;color:var(--muted)}a{color:var(--acc)}.over{color:var(--warn);font-weight:700}
+</style>
+<div class="wrap">
+<h1>Ski Trip Finder</h1>
+<p class="sub">Describe the trip once. Save it, then run <code>/sko_2027 run</code> in Claude Code. Claude scans resorts and listing sites, you approve, then it drafts the inquiry emails (never sends).</p>
+<div class="tabs"><div class="tab on" data-t="spec">1. Trip spec</div><div class="tab" data-t="res">2. Results &amp; approvals</div></div>
+
+<div id="spec">
+<form id="f"></form>
+<div class="bar">
+  <button class="p" id="save">Save spec</button>
+  <button id="launch">Save &amp; run in Claude (Terminal)</button>
+  <button id="copy">Copy run command</button>
+  <button id="load">Load spec.json…</button>
+  <button id="dl">Download spec.json</button>
+  <span id="msg"></span>
+</div>
+<p class="hint" id="mode"></p>
+<pre id="cmd" hidden></pre>
+<input type="file" id="file" accept=".json" hidden>
+</div>
+
+<div id="res" hidden>
+<p class="sub">Candidates found by the last run. Tick the ones you like, save, then run <code>/sko_2027 drafts</code>.</p>
+<div id="tbl"></div>
+<div class="bar"><button class="p" id="saveres">Save approvals</button>
+<button id="draftbtn">Save &amp; create email drafts in Claude</button>
+<button id="reload">Reload</button><span id="msg2"></span></div>
+</div>
+</div>
+<script>
+const FIELDS=[
+ ["Trip",[
+  ["trip.name","Trip name","text"],
+  ["trip.check_in","Check-in","date"],["trip.check_out","Check-out","date"],
+  ["trip.strict_dates","Dates are strict (flights booked)","bool"],
+  ["trip.airport","Arrival / departure airport","text"],
+  ["trip.max_drive_hours","Max drive from airport (hours)","number"]]],
+ ["Group & beds",[
+  ["group.adults","Number of adults","number"],
+  ["group.description","Group description","text","e.g. 6 adults, all male"],
+  ["beds.real_beds_required","Real beds required","number"],
+  ["beds.prefer_single_beds","Prefer single beds, one per person","bool"],
+  ["beds.allow_sofa_beds","Allow sofa beds to count","bool"],
+  ["beds.more_separate_bedrooms_is_better","More separate bedrooms is better","bool"]]],
+ ["Location",[
+  ["location.preferred_resorts","Preferred resorts","list","comma separated; others are fine if 'Other resorts OK' is on"],
+  ["location.other_resorts_ok","Other resorts OK","bool"],
+  ["location.lift_access","Lift access wanted","text"],
+  ["location.driving_to_lifts_is_showstopper","Needing a car to reach the lifts is a showstopper","bool"]]],
+ ["Budget",[
+  ["budget.currency","Currency","text"],
+  ["budget.max_total","Max total (all nights)","number"],
+  ["budget.ideal_total","Ideal total","number"],
+  ["budget.flexibility_note","Flexibility","text"]]],
+ ["Quality",[
+  ["quality.tier","Quality tier","text"],
+  ["quality.quality_beats_location","Quality matters more than being right on the lifts","bool"],
+  ["quality.must_haves","Must-haves","list","comma separated, e.g. kitchen, parking, sauna"],
+  ["quality.deal_breakers","Deal-breakers","list","comma separated"]]],
+ ["Sources",[
+  ["sources.use","Sources to use","list"],
+  ["sources.exclude","Sources to exclude","list"],
+  ["sources.recheck_aggregator_hits_on_google_for_direct_price","Re-search aggregator hits on Google for a direct/owner price","bool"]]],
+ ["Emails",[
+  ["email.gmail_account","Your Gmail address (drafts are created here)","text"],
+  ["email.signer_name","Name to sign with","text"],
+  ["email.language","Email language","text"],
+  ["email.subject_template","Subject template","text","use {name}, {dates}"],
+  ["email.extra_notes_for_every_email","Extra line for every email","textarea"]]],
+ ["Output",[
+  ["output_dir","Output folder (candidates, drafts). A Google Drive path works","text"]]]
+];
+const $=s=>document.querySelector(s);let spec={};let server=false;
+const get=(o,p)=>p.split('.').reduce((a,k)=>a==null?a:a[k],o);
+function set(o,p,v){const ks=p.split('.');let c=o;ks.slice(0,-1).forEach(k=>c=c[k]=c[k]||{});c[ks.at(-1)]=v}
+function render(){const f=$('#f');f.innerHTML='';FIELDS.forEach(([title,fs])=>{const fe=document.createElement('fieldset');fe.innerHTML='<legend>'+title+'</legend><div class="grid"></div>';const g=fe.querySelector('.grid');
+ fs.forEach(([p,l,t,h])=>{const d=document.createElement('div');let v=get(spec,p);
+  if(t==='bool'){d.innerHTML='<label class="chk"><input type="checkbox" data-p="'+p+'" '+(v?'checked':'')+'> '+l+'</label>'}
+  else if(t==='textarea'){d.innerHTML='<label>'+l+'</label><textarea data-p="'+p+'" data-t="text"></textarea>';d.querySelector('textarea').value=v||''}
+  else{d.innerHTML='<label>'+l+'</label><input type="'+(t==='list'?'text':t)+'" data-p="'+p+'" data-t="'+t+'">';d.querySelector('input').value=t==='list'?(v||[]).join(', '):(v??'')}
+  if(h)d.insertAdjacentHTML('beforeend','<div class="hint">'+h+'</div>');g.appendChild(d)});f.appendChild(fe)})}
+function collect(){const o=JSON.parse(JSON.stringify(spec));document.querySelectorAll('#f [data-p]').forEach(e=>{const p=e.dataset.p,t=e.dataset.t;
+ let v=e.type==='checkbox'?e.checked:e.value;if(t==='number')v=v===''?null:Number(v);if(t==='list')v=v.split(',').map(s=>s.trim()).filter(Boolean);set(o,p,v)});return o}
+const msg=(t,id='#msg')=>{$(id).textContent=t;setTimeout(()=>$(id).textContent='',3500)};
+async function init(){try{const r=await fetch('/api/spec');if(!r.ok)throw 0;spec=await r.json();server=true;$('#mode').textContent='Connected to the local server: Save writes spec.json directly.'}catch(e){server=false;spec=await (await fetch('../spec.example.json').catch(()=>({json:()=>({})}))).json().catch(()=>({}));$('#mode').textContent='Opened as a plain file: use "Load spec.json…" and "Download spec.json" (put it in the skill folder). Run python3 server.py for one-click save and launch.';}
+ render();if(server)loadRes()}
+$('#save').onclick=async()=>{spec=collect();if(server){const r=await fetch('/api/spec',{method:'POST',body:JSON.stringify(spec)});msg(r.ok?'Saved':'Save failed')}else dl()};
+function dl(){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(collect(),null,2)],{type:'application/json'}));a.download='spec.json';a.click();msg('Downloaded: move it into the skill folder')}
+$('#dl').onclick=dl;
+$('#load').onclick=()=>$('#file').click();
+$('#file').onchange=async e=>{spec=JSON.parse(await e.target.files[0].text());render();msg('Loaded')};
+$('#copy').onclick=async()=>{const c='claude "/sko_2027 run"';await navigator.clipboard.writeText(c);$('#cmd').hidden=false;$('#cmd').textContent=c;msg('Copied. Paste it in a terminal')};
+async function launch(mode){if(!server){msg('Start server.py to launch');return}spec=collect();await fetch('/api/spec',{method:'POST',body:JSON.stringify(spec)});
+ const r=await (await fetch('/api/launch',{method:'POST',body:JSON.stringify({mode})})).json();if(r.launched)msg('Opened Terminal');else{$('#cmd').hidden=false;$('#cmd').textContent=r.command;msg('Run this in a terminal')}}
+$('#launch').onclick=()=>launch('run');
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===t));$('#spec').hidden=t.dataset.t!=='spec';$('#res').hidden=t.dataset.t!=='res';if(t.dataset.t==='res')loadRes()});
+let cands=[];
+async function loadRes(){if(!server){$('#tbl').innerHTML='<p class="hint">Results need the local server (python3 server.py).</p>';return}cands=await (await fetch('/api/candidates')).json();
+ if(!cands.length){$('#tbl').innerHTML='<p class="hint">No results yet. Save the spec and run /sko_2027 run.</p>';return}
+ const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+ $('#tbl').innerHTML='<table><tr><th>Approve</th><th>#</th><th>Apartment</th><th>Resort / drive</th><th>Beds</th><th>Price</th><th>Notes</th></tr>'+cands.map((c,i)=>
+ '<tr><td><input type="checkbox" data-i="'+i+'" '+(c.approved?'checked':'')+'></td><td>'+esc(c.n)+'</td><td><a href="'+esc(c.url)+'" target="_blank" rel="noopener">'+esc(c.name)+'</a><small>'+esc(c.contact||c.email||'')+'</small></td><td>'+esc(c.resort)+'<small>'+esc(c.drive)+'</small></td><td>'+esc(c.beds)+'</td><td>'+esc(c.price)+'</td><td>'+esc(c.notes||'')+'</td></tr>').join('')+'</table>'}
+async function saveRes(){document.querySelectorAll('#tbl [data-i]').forEach(e=>cands[+e.dataset.i].approved=e.checked);await fetch('/api/candidates',{method:'POST',body:JSON.stringify(cands)});msg('Saved','#msg2')}
+$('#saveres').onclick=saveRes;$('#reload').onclick=loadRes;
+$('#draftbtn').onclick=async()=>{await saveRes();const r=await (await fetch('/api/launch',{method:'POST',body:JSON.stringify({mode:'drafts'})})).json();if(r.launched)msg('Opened Terminal','#msg2');else{alert('Run in a terminal:\n'+r.command)}};
+init();
+</script>
