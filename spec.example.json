@@ -18,13 +18,18 @@
     "more_separate_bedrooms_is_better": true
   },
   "location": {
-    "preferred_resorts": ["La Thuile", "Val Gardena", "Madonna di Campiglio"],
+    "preferred_resorts": [
+      "La Thuile",
+      "Val Gardena",
+      "Madonna di Campiglio"
+    ],
     "other_resorts_ok": true,
     "lift_access": "walking distance to a lift (ski-in/ski-out is a bonus)",
     "driving_to_lifts_is_showstopper": true
   },
   "budget": {
     "currency": "EUR",
+    "min_total": 5000,
     "max_total": 8800,
     "ideal_total": 8000,
     "flexibility_note": "Slightly over the max is OK only for something exceptional"
@@ -32,11 +37,25 @@
   "quality": {
     "tier": "medium-plus to high class, must look nice (no bootcamp rooms)",
     "quality_beats_location": true,
-    "must_haves": ["kitchen"],
-    "deal_breakers": ["sofa beds counted as beds", "dated or shabby apartments", "needs a car to reach the lifts"]
+    "must_haves": [
+      "kitchen"
+    ],
+    "deal_breakers": [
+      "sofa beds counted as beds",
+      "dated or shabby apartments",
+      "needs a car to reach the lifts"
+    ]
   },
   "sources": {
-    "use": ["Airbnb", "Booking.com", "Vrbo", "Holidu", "Interhome", "local agencies", "owner sites"],
+    "use": [
+      "Airbnb",
+      "Booking.com",
+      "Vrbo",
+      "Holidu",
+      "Interhome",
+      "local agencies",
+      "owner sites"
+    ],
     "exclude": [],
     "recheck_aggregator_hits_on_google_for_direct_price": true
   },

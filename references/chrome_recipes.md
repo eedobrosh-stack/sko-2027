@@ -45,3 +45,16 @@ Working recipe per draft (verified on 20 drafts):
 4. Verify with the sidebar label "Drafts N" (count goes up by one).
 
 Do NOT: type the body with keystrokes (Gmail shortcuts like "?" eat it), use `?view=cm&body=` compose URLs (they never save), or navigate to `#inbox?compose=new` repeatedly (it reuses the open window and appends text into it). To add a recipient to an existing draft: search `in:drafts subject:"..."`, open the row (use `find` to get its ref, then click the ref), insertText into the To input, then Save & close.
+
+## Google Maps (find owners' own websites)
+
+`https://www.google.com/maps/search/luxury+apartments+chalet+rental+<Resort>` works in Chrome without a login. Scroll `div[role="feed"]` 3 to 4 times, then:
+```js
+const f=document.querySelector('div[role="feed"]');for(let i=0;i<3;i++){f.scrollTo(0,f.scrollHeight);await new Promise(r=>setTimeout(r,1400));}
+[...document.querySelectorAll('div[role="feed"] > div')].filter(d=>d.querySelector('a.hfpxzc')).map(d=>({
+ n:d.querySelector('a.hfpxzc')?.getAttribute('aria-label'),
+ r:(d.querySelector('span.MW4etd')?.innerText||'')+(d.querySelector('span.UY7F9')?.innerText||''),
+ c:(d.innerText.split('\n')[3]||'').slice(0,40),
+ w:[...d.querySelectorAll('a')].find(a=>a.getAttribute('data-value')==='Website')?.href}))
+```
+About 15 to 18 cards load per search. Drop hotels, shops, and URLs on booking.com, airbnb, freecancellations, bluepillow, facebook. Cards with no Website button usually only exist on platforms. Google web search (google.com/search?q=...) also works in Chrome for finding an owner site; drop booking-site mirrors by domain.
